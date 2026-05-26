@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon Ads - Complete ASIN Diagnostics</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container { max-width: 2000px; margin: 0 auto; }
+        
+        header {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #1F4E78;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+        
+        .filter-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .filter-tabs {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-tab {
+            background: #f0f0f0;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .filter-tab.active {
+            background: #1F4E78;
+            border-color: #1F4E78;
+            color: white;
+        }
+        
+        .asin-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 5px solid #1F4E78;
+        }
+        
+        .asin-card.critical {
+            border-left-color: #C62828;
+            background: #FFF5F5;
+        }
+        
+        .asin-card.warning {
+            border-left-color: #FF9800;
+            background: #FFF8F0;
+        }
+        
+        .asin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .asin-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #1F4E78;
+        }
+        
+        .asin-category {
+            color: #999;
+            font-size: 11px;
+            margin-top: 3px;
+        }
+        
+        .asin-badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .badge {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        .badge-priority-high { background: #FFCDD2; color: #B71C1C; }
+        .badge-priority-medium { background: #FFE0B2; color: #E65100; }
+        .badge-priority-low { background: #C8E6C9; color: #1B5E20; }
+        
+        .badge-hero { background: #FFD700; color: #333; }
+        .badge-grow { background: #81C784; color: white; }
+        .badge-optimize { background: #64B5F6; color: white; }
+        .badge-fix { background: #EF5350; color: white; }
+        .badge-park { background: #BDBDBD; color: white; }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .metric {
+            background: #F5F5F5;
+            border-radius: 6px;
+            padding: 12px;
+            border-left: 3px solid #1F4E78;
+        }
+        
+        .metric.positive { border-left-color: #4CAF50; }
+        .metric.negative { border-left-color: #F44336; }
+        .metric.neutral { border-left-color: #2196F3; }
+        
+        .metric-label {
+            color: #999;
+            font-size: 10px;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .metric-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1F4E78;
+        }
+        
+        .metric-change {
+            font-size: 11px;
+            margin-top: 3px;
+            font-weight: 600;
+        }
+        
+        .metric-change.up { color: #4CAF50; }
+        .metric-change.down { color: #F44336; }
+        .metric-change.neutral { color: #999; }
+        
+        .diagnostic-section {
+            background: #F9F9F9;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 3px solid #2196F3;
+        }
+        
+        .diagnostic-title {
+            font-weight: 600;
+            color: #1F4E78;
+            font-size: 12px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        
+        .diagnostic-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid #E0E0E0;
+            font-size: 12px;
+        }
+        
+        .diagnostic-item:last-child {
+            border-bottom: none;
+        }
+        
+        .diagnostic-label {
+            color: #666;
+            flex: 1;
+        }
+        
+        .diagnostic-value {
+            font-weight: 600;
+            color: #1F4E78;
+            text-align: right;
+            margin-left: 10px;
+        }
+        
+        .actions-section {
+            background: #E8F5E9;
+            border-left: 3px solid #4CAF50;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        .actions-title {
+            font-weight: 600;
+            color: #1B5E20;
+            font-size: 12px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        
+        .action-item {
+            background: white;
+            border-left: 3px solid #4CAF50;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .action-priority {
+            font-weight: 600;
+            color: #1B5E20;
+            margin-bottom: 3px;
+        }
+        
+        .action-description {
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .action-timeline {
+            font-size: 11px;
+            color: #999;
+        }
+        
+        .issues-summary {
+            background: #FFEBEE;
+            border-left: 3px solid #C62828;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 15px;
+            font-size: 12px;
+        }
+        
+        .issues-summary strong {
+            color: #B71C1C;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .issues-list {
+            margin: 5px 0;
+            padding-left: 20px;
+        }
+        
+        .issues-list li {
+            margin: 3px 0;
+            color: #666;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #1F4E78;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .funneldiagnosis {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 12px;
+            background: #F5F5F5;
+            border-radius: 6px;
+        }
+        
+        .funnel-stage {
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+            border-left: 3px solid #2196F3;
+        }
+        
+        .funnel-stage strong {
+            display: block;
+            font-size: 11px;
+            color: #999;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .funnel-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #1F4E78;
+        }
+        
+        .funnel-change {
+            font-size: 10px;
+            margin-top: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 Complete ASIN Diagnostics Dashboard</h1>
+            <p class="subtitle">Full funnel analysis: Impressions → Clicks → Sessions → Sales → ROAS with detailed issue diagnosis</p>
+            <p style="color: #999; font-size: 11px;">Last updated: <span id="lastUpdate">Loading...</span></p>
+        </header>
+        
+        <div class="filter-section">
+            <div class="filter-tabs" id="filterTabs"></div>
+        </div>
+        
+        <div id="dashboard">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Loading complete diagnostics...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SHEET_ID = '1nnwI91pK5A-qHW8XGJixhgvd0dgVmAptFuvbewbxeyk';
+        
+        const COLS = {
+            ASIN: 0, CATEGORY: 2,
+            COMPARE_SALES: 3, BASE_SALES: 5, SALES_CHANGE: 7,
+            COMPARE_ORDERS: 16, BASE_ORDERS: 17, ORDERS_CHANGE: 18,
+            COMPARE_AD_SPEND: 28, BASE_AD_SPEND: 30, AD_SPEND_CHANGE: 32,
+            COMPARE_IMPRESSIONS: 33, BASE_IMPRESSIONS: 34, IMPRESSIONS_CHANGE: 35,
+            COMPARE_AD_CLICKS: 40, BASE_AD_CLICKS: 41, AD_CLICKS_CHANGE: 42,
+            COMPARE_PAGE_VIEWS: 46, BASE_PAGE_VIEWS: 47, PAGE_VIEWS_CHANGE: 48,
+            COMPARE_CPC: 49, BASE_CPC: 50,
+            COMPARE_ROAS: 52, BASE_ROAS: 53, ROAS_CHANGE: 54,
+            COMPARE_ACOS: 57, BASE_ACOS: 58, ACOS_CHANGE: 59,
+            COMPARE_AD_CVR: 62, BASE_AD_CVR: 63,
+            COMPARE_TACOS: 65, BASE_TACOS: 66, TACOS_CHANGE: 67,
+            COMPARE_BUY_BOX: 73, BASE_BUY_BOX: 74,
+            COMPARE_CVR: 79, BASE_CVR: 80,
+            BASE_RATINGS: 95, COMPARE_RATINGS: 96,
+            BASE_REVIEWS: 98, COMPARE_REVIEWS: 99,
+            BASE_SESSIONS: 100, COMPARE_SESSIONS: 101
+        };
+        
+        let allASINs = [];
+        let currentFilter = 'all';
+        
+        async function initDashboard() {
+            try {
+                await fetchData();
+                analyzeASINs();
+                renderFilterTabs();
+                filterByClassification('all');
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleString();
+            } catch (error) {
+                document.getElementById('dashboard').innerHTML = `<div style="color: #c62828;">Error: ${error.message}</div>`;
+            }
+        }
+        
+        async function fetchData() {
+            const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
+            const response = await fetch(csvUrl);
+            if (!response.ok) throw new Error('Failed to fetch');
+            const csv = await response.text();
+            
+            const lines = csv.split('\n');
+            lines.forEach((line, idx) => {
+                if (idx === 0 || !line.trim()) return;
+                const cells = line.split(',').map(c => c.trim().replace(/"/g, ''));
+                if (!cells[COLS.ASIN]) return;
+                
+                allASINs.push({
+                    asin: cells[COLS.ASIN],
+                    category: cells[COLS.CATEGORY],
+                    compareSales: parseFloat(cells[COLS.COMPARE_SALES]) || 0,
+                    baseSales: parseFloat(cells[COLS.BASE_SALES]) || 0,
+                    salesChange: parseFloat(cells[COLS.SALES_CHANGE]) || 0,
+                    compareOrders: parseFloat(cells[COLS.COMPARE_ORDERS]) || 0,
+                    baseOrders: parseFloat(cells[COLS.BASE_ORDERS]) || 0,
+                    ordersChange: parseFloat(cells[COLS.ORDERS_CHANGE]) || 0,
+                    compareAdSpend: parseFloat(cells[COLS.COMPARE_AD_SPEND]) || 0,
+                    baseAdSpend: parseFloat(cells[COLS.BASE_AD_SPEND]) || 0,
+                    adSpendChange: parseFloat(cells[COLS.AD_SPEND_CHANGE]) || 0,
+                    compareImpressions: parseFloat(cells[COLS.COMPARE_IMPRESSIONS]) || 0,
+                    baseImpressions: parseFloat(cells[COLS.BASE_IMPRESSIONS]) || 0,
+                    impressionsChange: parseFloat(cells[COLS.IMPRESSIONS_CHANGE]) || 0,
+                    compareAdClicks: parseFloat(cells[COLS.COMPARE_AD_CLICKS]) || 0,
+                    baseAdClicks: parseFloat(cells[COLS.BASE_AD_CLICKS]) || 0,
+                    adClicksChange: parseFloat(cells[COLS.AD_CLICKS_CHANGE]) || 0,
+                    comparePageViews: parseFloat(cells[COLS.COMPARE_PAGE_VIEWS]) || 0,
+                    basePageViews: parseFloat(cells[COLS.BASE_PAGE_VIEWS]) || 0,
+                    pageViewsChange: parseFloat(cells[COLS.PAGE_VIEWS_CHANGE]) || 0,
+                    compareCPC: parseFloat(cells[COLS.COMPARE_CPC]) || 0,
+                    baseCPC: parseFloat(cells[COLS.BASE_CPC]) || 0,
+                    compareROAS: parseFloat(cells[COLS.COMPARE_ROAS]) || 0,
+                    baseROAS: parseFloat(cells[COLS.BASE_ROAS]) || 0,
+                    roasChange: parseFloat(cells[COLS.ROAS_CHANGE]) || 0,
+                    compareACOS: parseFloat(cells[COLS.COMPARE_ACOS]) || 0,
+                    baseACOS: parseFloat(cells[COLS.BASE_ACOS]) || 0,
+                    acosChange: parseFloat(cells[COLS.ACOS_CHANGE]) || 0,
+                    compareAdCVR: parseFloat(cells[COLS.COMPARE_AD_CVR]) || 0,
+                    baseAdCVR: parseFloat(cells[COLS.BASE_AD_CVR]) || 0,
+                    compareTACOS: parseFloat(cells[COLS.COMPARE_TACOS]) || 0,
+                    baseTACOS: parseFloat(cells[COLS.BASE_TACOS]) || 0,
+                    tacosChange: parseFloat(cells[COLS.TACOS_CHANGE]) || 0,
+                    compareBuyBox: parseFloat(cells[COLS.COMPARE_BUY_BOX]) || 0,
+                    baseBuyBox: parseFloat(cells[COLS.BASE_BUY_BOX]) || 0,
+                    compareCVR: parseFloat(cells[COLS.COMPARE_CVR]) || 0,
+                    baseCVR: parseFloat(cells[COLS.BASE_CVR]) || 0,
+                    compareRatings: parseFloat(cells[COLS.COMPARE_RATINGS]) || 0,
+                    baseRatings: parseFloat(cells[COLS.BASE_RATINGS]) || 0,
+                    compareReviews: parseFloat(cells[COLS.COMPARE_REVIEWS]) || 0,
+                    baseReviews: parseFloat(cells[COLS.BASE_REVIEWS]) || 0,
+                    compareSessions: parseFloat(cells[COLS.COMPARE_SESSIONS]) || 0,
+                    baseSessions: parseFloat(cells[COLS.BASE_SESSIONS]) || 0
+                });
+            });
+        }
+        
+        function analyzeASINs() {
+            allASINs.forEach(asin => {
+                asin.issues = [];
+                asin.severity = 'low';
+                
+                // Funnel analysis
+                asin.ctr = asin.compareImpressions > 0 ? (asin.compareAdClicks / asin.compareImpressions * 100) : 0;
+                asin.adCVR = asin.compareAdClicks > 0 ? (asin.compareOrders / asin.compareAdClicks * 100) : 0;
+                asin.sessionConversion = asin.compareSessions > 0 ? (asin.compareOrders / asin.compareSessions * 100) : 0;
+                
+                // Issue detection
+                if (asin.compareImpressions < asin.baseImpressions * 0.7) {
+                    asin.issues.push('📉 Impressions Down 30%+ - Check keyword rankings, bids, budget');
+                }
+                if (asin.ctr < 0.3) {
+                    asin.issues.push('📊 Low CTR (<0.3%) - Improve ad copy, headlines, pricing');
+                }
+                if (asin.adCVR < 1) {
+                    asin.issues.push('🔧 Low Ad CVR (<1%) - Targeting issue, wrong audience');
+                }
+                if (asin.compareCVR < asin.baseCVR * 0.8) {
+                    asin.issues.push('🛍️ PDP CVR Down - Improve images, reviews, price positioning');
+                }
+                if (asin.compareBuyBox < 80) {
+                    asin.issues.push('📦 Low Buy Box % - Check pricing, shipping, inventory');
+                }
+                if (asin.compareACOS > 50) {
+                    asin.issues.push('💰 High ACOS (>50%) - Bid too high, keywords not converting');
+                }
+                if (asin.compareTACOS > 8) {
+                    asin.issues.push('⚠️ High TACOS (>8%) - Too much ad spend relative to sales');
+                }
+                if (asin.salesChange < -30) {
+                    asin.issues.push('📉 Sales Drop 30%+ - Competition increased, lost ranking?');
+                }
+                if (asin.compareROAS < 2) {
+                    asin.issues.push('🔴 Low ROAS (<2x) - Unprofitable, consider pausing');
+                }
+                
+                asin.severity = asin.issues.length >= 4 ? 'critical' : asin.issues.length >= 2 ? 'warning' : 'low';
+                
+                // Classification
+                if (asin.compareROAS > 4 && asin.compareTACOS < 5 && asin.impressionsChange > 0) {
+                    asin.classification = 'hero';
+                } else if (asin.compareROAS > 3 && asin.compareTACOS < 8 && asin.salesChange > -10) {
+                    asin.classification = 'grow';
+                } else if (asin.compareCVR < asin.baseCVR * 0.8) {
+                    asin.classification = 'fix-pdp';
+                } else if (asin.compareACOS > 50 && asin.compareTACOS > 10) {
+                    asin.classification = 'fix-keywords';
+                } else if (asin.compareROAS < 2) {
+                    asin.classification = 'park';
+                } else {
+                    asin.classification = 'optimize';
+                }
+                
+                asin.priority = asin.issues.length >= 3 ? 'High' : asin.issues.length >= 1 ? 'Medium' : 'Low';
+            });
+            
+            allASINs.sort((a, b) => {
+                const severityOrder = { critical: 0, warning: 1, low: 2 };
+                return severityOrder[a.severity] - severityOrder[b.severity];
+            });
+        }
+        
+        function renderFilterTabs() {
+            const tabs = [
+                { id: 'all', label: '📋 All' },
+                { id: 'critical', label: '🔴 Critical Issues' },
+                { id: 'hero', label: '⭐ Hero (Scale)' },
+                { id: 'grow', label: '📈 Grow' },
+                { id: 'optimize', label: '🎯 Optimize' },
+                { id: 'fix-pdp', label: '🔧 Fix PDP' },
+                { id: 'fix-keywords', label: '🏷️ Fix Keywords' },
+                { id: 'park', label: '🛑 Park' }
+            ];
+            
+            document.getElementById('filterTabs').innerHTML = tabs.map(t => `
+                <div class="filter-tab ${t.id === currentFilter ? 'active' : ''}" onclick="filterByClassification('${t.id}')">
+                    ${t.label}
+                </div>
+            `).join('');
+        }
+        
+        function filterByClassification(type) {
+            currentFilter = type;
+            renderFilterTabs();
+            
+            let filtered = allASINs;
+            if (type === 'critical') {
+                filtered = allASINs.filter(a => a.severity === 'critical');
+            } else if (type !== 'all') {
+                filtered = allASINs.filter(a => a.classification === type);
+            }
+            
+            renderASINCards(filtered.slice(0, 20));
+        }
+        
+        function renderASINCards(data) {
+            if (data.length === 0) {
+                document.getElementById('dashboard').innerHTML = '<div class="loading"><p>No ASINs found</p></div>';
+                return;
+            }
+            
+            document.getElementById('dashboard').innerHTML = data.map(asin => `
+                <div class="asin-card ${asin.severity}">
+                    <div class="asin-header">
+                        <div>
+                            <div class="asin-title">${asin.asin}</div>
+                            <div class="asin-category">${asin.category}</div>
+                        </div>
+                        <div class="asin-badges">
+                            <span class="badge badge-priority-${asin.priority.toLowerCase()}">${asin.priority} Priority</span>
+                            <span class="badge badge-${asin.classification}">${getClassLabel(asin.classification)}</span>
+                        </div>
+                    </div>
+                    
+                    ${asin.issues.length > 0 ? `
+                        <div class="issues-summary">
+                            <strong>⚠️ Issues Detected (${asin.issues.length}):</strong>
+                            <ul class="issues-list">
+                                ${asin.issues.map(i => `<li>${i}</li>`).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="diagnostic-section">
+                        <div class="diagnostic-title">📊 Funnel Metrics</div>
+                        <div class="funneldiagnosis">
+                            <div class="funnel-stage">
+                                <strong>Impressions</strong>
+                                <div class="funnel-value">${asin.compareImpressions.toLocaleString()}</div>
+                                <div class="funnel-change ${asin.impressionsChange > 0 ? 'up' : 'down'}">
+                                    ${asin.impressionsChange > 0 ? '+' : ''}${asin.impressionsChange.toFixed(1)}%
+                                </div>
+                            </div>
+                            <div class="funnel-stage">
+                                <strong>CTR</strong>
+                                <div class="funnel-value">${asin.ctr.toFixed(2)}%</div>
+                                <div class="funnel-change">Ad Clicks: ${asin.compareAdClicks}</div>
+                            </div>
+                            <div class="funnel-stage">
+                                <strong>Ad CVR</strong>
+                                <div class="funnel-value">${asin.adCVR.toFixed(2)}%</div>
+                                <div class="funnel-change">From Ads: ${asin.compareOrders}</div>
+                            </div>
+                            <div class="funnel-stage">
+                                <strong>PDP CVR</strong>
+                                <div class="funnel-value">${asin.compareCVR.toFixed(2)}%</div>
+                                <div class="funnel-change ${asin.compareCVR > asin.baseCVR ? 'up' : 'down'}">
+                                    vs ${asin.baseCVR.toFixed(2)}%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric positive">
+                            <div class="metric-label">Sales</div>
+                            <div class="metric-value">$${asin.compareSales.toFixed(0)}</div>
+                            <div class="metric-change ${asin.salesChange > 0 ? 'up' : 'down'}">
+                                ${asin.salesChange > 0 ? '↑' : '↓'} ${Math.abs(asin.salesChange).toFixed(1)}%
+                            </div>
+                        </div>
+                        
+                        <div class="metric">
+                            <div class="metric-label">ROAS</div>
+                            <div class="metric-value">${asin.compareROAS.toFixed(2)}x</div>
+                            <div class="metric-change ${asin.roasChange > 0 ? 'up' : 'down'}">
+                                ${asin.roasChange > 0 ? '↑' : '↓'} ${Math.abs(asin.roasChange).toFixed(2)}x
+                            </div>
+                        </div>
+                        
+                        <div class="metric">
+                            <div class="metric-label">TACOS</div>
+                            <div class="metric-value">${asin.compareTACOS.toFixed(2)}%</div>
+                            <div class="metric-change ${asin.tacosChange > 0 ? 'down' : 'up'}">
+                                ${asin.tacosChange > 0 ? '↑' : '↓'} ${Math.abs(asin.tacosChange).toFixed(2)}%
+                            </div>
+                        </div>
+                        
+                        <div class="metric">
+                            <div class="metric-label">ACOS</div>
+                            <div class="metric-value">${asin.compareACOS.toFixed(1)}%</div>
+                            <div class="metric-change ${asin.acosChange > 0 ? 'down' : 'up'}">
+                                ${asin.acosChange > 0 ? '↑' : '↓'} ${Math.abs(asin.acosChange).toFixed(1)}%
+                            </div>
+                        </div>
+                        
+                        <div class="metric neutral">
+                            <div class="metric-label">CPC</div>
+                            <div class="metric-value">$${asin.compareCPC.toFixed(2)}</div>
+                            <div class="metric-change neutral">
+                                Base: $${asin.baseCPC.toFixed(2)}
+                            </div>
+                        </div>
+                        
+                        <div class="metric neutral">
+                            <div class="metric-label">Buy Box %</div>
+                            <div class="metric-value">${asin.compareBuyBox.toFixed(0)}%</div>
+                            <div class="metric-change neutral">
+                                Sessions: ${asin.compareSessions}
+                            </div>
+                        </div>
+                        
+                        <div class="metric neutral">
+                            <div class="metric-label">Ad Spend</div>
+                            <div class="metric-value">$${asin.compareAdSpend.toFixed(0)}</div>
+                            <div class="metric-change ${asin.adSpendChange > 0 ? 'up' : 'down'}">
+                                ${asin.adSpendChange > 0 ? '↑' : '↓'} ${Math.abs(asin.adSpendChange).toFixed(1)}%
+                            </div>
+                        </div>
+                        
+                        <div class="metric neutral">
+                            <div class="metric-label">Reviews</div>
+                            <div class="metric-value">${asin.compareReviews}</div>
+                            <div class="metric-change neutral">
+                                Rating: ${asin.compareRatings.toFixed(1)}⭐
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="actions-section">
+                        <div class="actions-title">🎯 Recommended Actions</div>
+                        ${getActionItems(asin).map(action => `
+                            <div class="action-item">
+                                <div class="action-priority">${action.priority}</div>
+                                <div class="action-description">${action.action}</div>
+                                <div class="action-timeline">⏱️ ${action.timeline}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function getActionItems(asin) {
+            const actions = [];
+            
+            if (asin.compareROAS > 4 && asin.compareTACOS < 5) {
+                actions.push({ priority: '🚀 SCALE', action: 'Increase budget 20-30%, focus on top converting keywords', timeline: 'This week' });
+            }
+            if (asin.compareImpressions < asin.baseImpressions * 0.7) {
+                actions.push({ priority: '📈 LOW VISIBILITY', action: 'Increase bids on core keywords, expand keyword list', timeline: 'Immediate' });
+            }
+            if (asin.ctr < 0.3) {
+                actions.push({ priority: '📝 AD COPY', action: 'Improve headlines, add benefits, test new creatives', timeline: 'Next 3 days' });
+            }
+            if (asin.adCVR < 1) {
+                actions.push({ priority: '🎯 TARGETING', action: 'Review keyword relevance, narrow targeting, fix match types', timeline: 'Next 5 days' });
+            }
+            if (asin.compareCVR < asin.baseCVR * 0.8) {
+                actions.push({ priority: '🔧 PDP ISSUES', action: 'Improve images, enhance bullets, optimize pricing, add reviews', timeline: 'Next 1-2 weeks' });
+            }
+            if (asin.compareACOS > 50) {
+                actions.push({ priority: '💰 HIGH COST', action: 'Reduce bids 15-20%, pause underperforming keywords', timeline: 'Immediate' });
+            }
+            if (asin.compareBuyBox < 80) {
+                actions.push({ priority: '📦 BUY BOX LOSS', action: 'Check pricing, inventory, shipping speed, seller rating', timeline: 'Immediate' });
+            }
+            if (asin.salesChange < -30) {
+                actions.push({ priority: '📉 SALES DECLINE', action: 'Investigate competition, check reviews, monitor rankings', timeline: 'Urgent' });
+            }
+            
+            if (actions.length === 0) {
+                actions.push({ priority: '✓ MONITOR', action: 'Metrics are healthy, continue current strategy and monitor', timeline: 'Weekly' });
+            }
+            
+            return actions;
+        }
+        
+        function getClassLabel(classification) {
+            const labels = {
+                'hero': '⭐ Hero',
+                'grow': '📈 Grow',
+                'optimize': '🎯 Optimize',
+                'fix-pdp': '🔧 PDP',
+                'fix-keywords': '🏷️ Keywords',
+                'park': '🛑 Park'
+            };
+            return labels[classification] || classification;
+        }
+        
+        window.addEventListener('load', initDashboard);
+    </script>
+</body>
+</html>
